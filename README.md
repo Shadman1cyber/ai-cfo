@@ -38,13 +38,27 @@
 - زhipu API Key (از [bigmodel.cn](https://bigmodel.cn))
 - Supabase Account (برای Storage، اختیاری)
 
-## راه‌اندازی محلی
+## راه‌اندازی locales (برایrunning locally including on phone)
 
 ### 1. کلون و نصب وابستگی‌ها
 
 ```bash
 cd ai-financial-analyst
 npm install
+```
+
+### 2. اسکریپت راه‌اندازی سریع (توصیه شده)
+
+```bash
+chmod +x setup_friend.sh
+./setup_friend.sh
+```
+
+### 2. اسکریپت راه‌اندازی سریع (توصیه شده)
+
+```bash
+chmod +x setup.sh
+./setup.sh
 ```
 
 ### 2. تنظیم متغیرهای محیطی
@@ -100,9 +114,16 @@ npm run dev
 ## دستورات مفید
 
 ```bash
-# توسعه
-npm run dev              # سرور توسعه
-npm run db:studio        # Prisma Studio (UI دیتابیس)
+#development
+npm run dev              # سرور توسعه (localhost فقط)
+npm run dev -- --hostname 0.0.0.0  # دسترسی از شبکه локал (برای گوشی)
+
+#setup
+./setup_friend.sh               # اسکریپت تنظیم اولیه (اختیاری)
+
+#	test
+npm run test             # تست‌های واحد (Vitest)
+```
 
 # تست
 npm run test             # تست‌های واحد (Vitest)
@@ -254,6 +275,25 @@ tests/
 - **هرگز** سیکرت‌ها را در کد یا Git commit نکنید
 - از Environment Variables در Vercel/Supabase/Neon استفاده کنید
 - `NEXTAUTH_SECRET` با `openssl rand -base64 32` تولید کنید
+
+### دسترسی از گوشی (Phone Access)
+
+برای اجرای برنامه روی گوشی‌های دیگر در شبکه neighborhood (Wi-Fi):
+
+```bash
+npm run dev -- --hostname 0.0.0.0
+```
+
+Then visit from phone:
+- http://[COMPUTER_IP]:3000
+
+**Notes:**
+- Must be on same Wi-Fi network
+- Firewall may block port 3000 (allow it)
+- RTL layout and Persian font (Vazirmatn) will display correctly
+- AI categorization works if Zhipu API key is configured
+- Use Ctrl+C to stop the server
+```
 
 ## تست‌ها
 
