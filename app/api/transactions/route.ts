@@ -85,8 +85,11 @@ export async function POST(request: Request) {
   let categorization: { categoryId: string | null; categoryName: string; confidence: number; fallback: boolean } | null = null;
 
   if (!finalCategoryId && description) {
-    categorization = await categorizeTransaction(session.user.id, description, amount, type);
-    finalCategoryId = categorization.categoryId || undefined;
+    const timeout = new Promise<{ categoryId: string | null; categoryName: string; confidence: number; fallback: boolean } | null>(
+      (resolve) => setTimeout(() => resolve(null), 2500)
+    );
+    categorization = await Promise.race([categorizeTransaction(session.user.id, description, amount, type), timeout]);
+    finalCategoryId = categorization?.categoryId || undefined;
   }
 
   const transaction = await prisma.transaction.create({

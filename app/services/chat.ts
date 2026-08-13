@@ -3,10 +3,65 @@ import { prisma } from "@/lib/prisma";
 import { logger } from "@/lib/logger";
 import { categorizeTransaction } from "./categorize";
 
+async function fallbackKeywordProcessing(userId: string, message: string): Promise<ChatAction> {
+  const lower = message.toLowerCase();
+
+  if (/(خلاصه|صورت مالی|وضعیت مالی|گزارش مالی)/i.test(message)) {
+    try {
+      return await handleGetSummary(userId, {}, "");
+    } catch (error) {
+      logger.warn({ error, userId }, "Fallback summary failed");
+    }
+  }
+
+  if (/(تراکنش|لیست آخرین|آخرین تراکنش|نشون بده|نمایش)/i.test(message) && /تراکنش/i.test(message)) {
+    try {
+      return await handleGetTransactions(userId, {}, "");
+    } catch (error) {
+      logger.warn({ error, userId }, "Fallback transactions failed");
+    }
+  }
+
+  if (/(دسته|دسته‌بندی)/i.test(message)) {
+    try {
+      return await handleGetCategories(userId, {}, "");
+    } catch (error) {
+      logger.warn({ error, userId }, "Fallback categories failed");
+    }
+  }
+
+  // Simple keyword-based fallback
+  if (/(پیش‌بینی|آیا باید|چه کار کنم)/i.test(lower)) {
+    return {
+      type: "unknown",
+      params: {},
+      response: "برای پیش‌بینی جریان نقدینگی، بهتر است روند درآمد و هزینه‌های چند ماه اخیر را بررسی کنید و یک متخصص مالی برای تحلیل دقیق‌تر کمک بگیرید.",
+    };
+  }
+
+  if (/(هزینه|درآمد|بدهی|فروش)/i.test(lower)) {
+    return {
+      type: "unknown",
+      params: {},
+      response: "برای مدیریت هزینه‌ها و بهینه‌کردن آن‌ها، پیشنهاد می‌کنم درآمد و هزینه‌های خود را بررسی کنید. اگر سؤال مشخص‌تری دارید، بپرسید.",
+    };
+  }
+
+  return {
+    type: "unknown",
+    params: {},
+    response: "متوجه نشدم، لطفاً دوباره بپرسید یا از گزینه‌های پیشنهادی انتخاب کنید.",
+  };
+}
+
 const zhipuClient = new OpenAI({
   apiKey: process.env.ZHIPU_API_KEY,
   baseURL: process.env.ZHIPU_BASE_URL,
+  timeout: 30000,
 });
+
+const isZhipuConfigured = () =>
+  !!process.env.ZHIPU_API_KEY && !process.env.ZHIPU_API_KEY.startsWith("your-");
 
 export interface ChatMessage {
   role: "user" | "assistant" | "system";
@@ -78,6 +133,10 @@ export async function processChatMessage(
   message: string,
   history: ChatMessage[] = []
 ): Promise<ChatAction> {
+  if (!isZhipuConfigured()) {
+    return fallbackKeywordProcessing(userId, message);
+  }
+
   try {
     const categories = await prisma.category.findMany({
       where: { OR: [{ userId }, { userId: null }] },
@@ -108,10 +167,18 @@ ${history.map((m) => `${m.role}: ${m.content}`).join("\n")}
       response_format: { type: "json_object" },
     });
 
-    const content = completion.choices[0]?.message?.content;
-    if (!content) throw new Error("Empty response");
+    const rawContent = completion.choices[0]?.message?.content;
+    if (!rawContent) throw new Error("Empty response");
 
-    const parsed = JSON.parse(content);
+    let parsed: { action?: string; params?: Record<string, unknown>; response?: string };
+    try {
+      parsed = JSON.parse(rawContent);
+    } catch (parseError) {
+      // AI didn't return valid JSON - use fallback keyword matching
+      logger.warn({ userId, rawContent }, "AI returned invalid JSON, using fallback");
+      return fallbackKeywordProcessing(userId, message);
+    }
+
     const actionType = parsed.action || "unknown";
     const params = parsed.params || {};
     const response = parsed.response || "متوجه نشدم، لطفاً دوباره بپرسید.";
@@ -153,11 +220,8 @@ ${history.map((m) => `${m.role}: ${m.content}`).join("\n")}
     return result;
   } catch (error) {
     logger.error({ error, userId, message }, "Chat processing failed");
-    return {
-      type: "unknown",
-      params: {},
-      response: "خطا در پردازش پیام. لطفاً دوباره تلاش کنید.",
-    };
+    // Return fallback instead of throwing to prevent JSON parse error in UI
+    return fallbackKeywordProcessing(userId, message);
   }
 }
 

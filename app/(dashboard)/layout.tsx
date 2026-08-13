@@ -8,6 +8,7 @@ const navigation = [
   { href: "/dashboard", label: "داشبورد", icon: "📊" },
   { href: "/dashboard/transactions", label: "تراکنش‌ها", icon: "📝" },
   { href: "/dashboard/categories", label: "دسته‌بندی‌ها", icon: "🏷️" },
+  { href: "/dashboard/chat", label: "دستیار هوشمند", icon: "🤖" },
 ];
 
 export default async function DashboardLayout({
@@ -44,17 +45,17 @@ export default async function DashboardLayout({
             ))}
           </nav>
 
-          <div className="p-4 border-t border-border">
-            <form action="/api/auth/signout" method="POST">
-              <button
-                type="submit"
-                className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-foreground hover:bg-danger-light hover:text-danger transition-colors"
-              >
-                <span className="text-xl">🚪</span>
-                <span className="font-medium">خروج</span>
-              </button>
-            </form>
-          </div>
+<div className="p-4 border-t border-border">
+  <form action="/api/auth/signout" method="POST">
+    <button
+      type="submit"
+      className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-foreground hover:bg-danger-light hover:text-danger transition-colors"
+    >
+      <span className="text-xl">🚪</span>
+      <span className="font-medium">خروج</span>
+    </button>
+  </form>
+</div>
         </div>
       </aside>
 
@@ -77,23 +78,26 @@ export default async function DashboardLayout({
           role="navigation"
           aria-label="منوی موبایل"
         >
-          <div className="flex justify-around h-16">
-            {navigation.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className="flex flex-col items-center justify-center gap-1 text-foreground"
-              >
-                <span className="text-xl">{item.icon}</span>
-                <span className="text-[10px] font-medium">{item.label}</span>
-              </Link>
-            ))}
-            <form action="/api/auth/signout" method="POST" className="flex flex-col items-center justify-center gap-1 text-foreground cursor-pointer">
-              <button type="submit" className="flex flex-col items-center justify-center gap-1">
-                <span className="text-xl">🚪</span>
-                <span className="text-[10px] font-medium">خروج</span>
-              </button>
-            </form>
+<div className="flex justify-around h-16">
+              {navigation.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className="flex flex-col items-center justify-center gap-1 text-foreground"
+                >
+                  <span className="text-xl">{item.icon}</span>
+                  <span className="text-[10px] font-medium">{item.label}</span>
+                </Link>
+              ))}
+              <form action="/api/auth/signout" method="POST">
+                <button
+                  type="submit"
+                  className="flex flex-col items-center justify-center gap-1 text-foreground cursor-pointer"
+                >
+                  <span className="text-xl">🚪</span>
+                  <span className="text-[10px] font-medium">خروج</span>
+                </button>
+              </form>
           </div>
         </nav>
       </main>

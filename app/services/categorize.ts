@@ -12,7 +12,11 @@ export interface CategorizationResult {
 const zhipuClient = new OpenAI({
   apiKey: process.env.ZHIPU_API_KEY,
   baseURL: process.env.ZHIPU_BASE_URL,
+  timeout: 15000,
 });
+
+const isZhipuConfigured = () =>
+  !!process.env.ZHIPU_API_KEY && !process.env.ZHIPU_API_KEY.startsWith("your-");
 
 const CATEGORIZATION_PROMPT = `شما یک سیستم دسته‌بندی تراکنش‌های مالی برای کسب‌وکام‌های کوچک و متوسط ایران هستید.
 دسته‌بندی‌های موجود (نام، نوع، آیکون):
@@ -51,6 +55,10 @@ export async function categorizeTransaction(
     .replace("{description}", description)
     .replace("{amount}", amount.toLocaleString("fa-IR"))
     .replace("{type}", type === "INCOME" ? "درآمد" : "هزینه");
+
+  if (!isZhipuConfigured()) {
+    return fallbackCategorize(categories, description, type);
+  }
 
   try {
     const completion = await zhipuClient.chat.completions.create({

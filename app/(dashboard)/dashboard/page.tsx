@@ -36,7 +36,9 @@ export default function DashboardPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch("/api/dashboard")
+    fetch("/api/dashboard", {
+      credentials: "include",
+    })
       .then((res) => {
         if (res.status === 401) {
           router.push("/login");

@@ -56,7 +56,7 @@ export default function ChatPage() {
         return;
       }
 
-      const assistantMessage: ChatTurn = { role: "assistant", content: json.data.reply };
+      const assistantMessage: ChatTurn = { role: "assistant", content: json.data.response };
       setMessages((prev) => [...prev, assistantMessage]);
     } catch {
       setError("خطای شبکه، لطفاً دوباره تلاش کنید");

@@ -24,6 +24,7 @@ declare module "@auth/core/jwt" {
 }
 
 export const authConfig: NextAuthConfig = {
+  trustHost: true,
   session: { strategy: "jwt" },
   pages: {
     signIn: "/login",

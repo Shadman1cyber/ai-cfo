@@ -173,7 +173,6 @@ export function ChatAssistant() {
           isOpen && "bg-danger"
         )}
         aria-label={isOpen ? "بستن چت" : "باز کردن دستیار مالی"}
-        style={{ border: '2px solid red', background: 'green' }} // DEBUG
       >
         {isOpen ? "✕" : "💬"}
       </button>
