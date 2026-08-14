@@ -2,7 +2,7 @@ import { beforeAll, afterAll, vi } from "vitest";
 import { PrismaMariaDb } from "@prisma/adapter-mariadb";
 import { PrismaClient } from "@/generated/prisma/client";
 
-const testAdapter = new PrismaMariaDb({ connectionString: process.env.DATABASE_URL });
+const testAdapter = new PrismaMariaDb(process.env.DATABASE_URL ?? "");
 
 export const testPrisma = new PrismaClient({
   adapter: testAdapter,

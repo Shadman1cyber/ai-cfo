@@ -3,7 +3,7 @@ import { PrismaClient } from "@/generated/prisma/client";
 
 const globalForPrisma = globalThis as unknown as { prisma: PrismaClient };
 
-const adapter = new PrismaMariaDb({ connectionString: process.env.DATABASE_URL });
+const adapter = new PrismaMariaDb(process.env.DATABASE_URL ?? "");
 
 export const prisma =
   globalForPrisma.prisma ||
