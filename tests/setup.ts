@@ -1,8 +1,8 @@
 import { beforeAll, afterAll, vi } from "vitest";
-import { PrismaPg } from "@prisma/adapter-pg";
+import { PrismaMariaDb } from "@prisma/adapter-mariadb";
 import { PrismaClient } from "@/generated/prisma/client";
 
-const testAdapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
+const testAdapter = new PrismaMariaDb({ connectionString: process.env.DATABASE_URL });
 
 export const testPrisma = new PrismaClient({
   adapter: testAdapter,
