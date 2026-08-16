@@ -55,7 +55,7 @@ async function fallbackKeywordProcessing(userId: string, message: string): Promi
 }
 
 const zhipuClient = new OpenAI({
-  apiKey: process.env.ZHIPU_API_KEY,
+  apiKey: process.env.ZHIPU_API_KEY ?? "not-configured",
   baseURL: process.env.ZHIPU_BASE_URL,
   timeout: 30000,
 });
