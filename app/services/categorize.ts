@@ -70,9 +70,12 @@ export async function categorizeTransaction(
     });
 
     const content = completion.choices[0]?.message?.content;
-    if (!content) throw new Error("Empty response");
+    if (!content || typeof content !== "string") throw new Error("Empty response");
 
-    const parsed = JSON.parse(content);
+    const trimmed = content.trim();
+    if (!trimmed) throw new Error("Empty response");
+
+    const parsed = JSON.parse(trimmed);
     const categoryId = parsed.categoryId;
 
     if (categoryId === "none" || !categoryId) {

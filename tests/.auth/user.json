@@ -2,7 +2,7 @@
   "cookies": [
     {
       "name": "authjs.csrf-token",
-      "value": "c29dd26cbec3a6f996b6b688084f1b63cc991ce2c1ecaefcdc516bdf592293f5%7C65815217a8009554bf7e7394ee9f458cc893ee898ec031264e6f5ba606e08a32",
+      "value": "ede0b5bfe484c711a8959bcbfccf47e0e728470b46ac1f5ff73712af773b793c%7C919ddc77392c6986292723763dc82ca33463d889a313f0d42a4c14131a7df6a0",
       "domain": "localhost",
       "path": "/",
       "expires": -1,
@@ -12,7 +12,7 @@
     },
     {
       "name": "authjs.callback-url",
-      "value": "http%3A%2F%2Flocalhost%3A3000",
+      "value": "http%3A%2F%2Flocalhost%3A3000%2Flogin",
       "domain": "localhost",
       "path": "/",
       "expires": -1,
@@ -22,10 +22,10 @@
     },
     {
       "name": "authjs.session-token",
-      "value": "eyJhbGciOiJkaXIiLCJlbmMiOiJBMjU2Q0JDLUhTNTEyIiwia2lkIjoiYWtLSVU1RkpzVmkyUXJiS3dOYldEeWV6YUZLX3NHV0toNHZSaC1GVGUyMnh1TXdQMlI0T3cwTldZZ0x0Q3EzblUxSUVBTmVVRm9MdTR3cDBmY2wtREEifQ..O8cV4V9U9-yLBXU90KCOqA.cX_4NP5CsZFGVH9bHq-4KnSNS-wf80KU3ZrwI-_dkGnulNE64-nMUUeAzvHJdZyE_24fevap4W1vQ3cpZu6e5NXQp6qjWH7B3K93-rr3v92CfbF8yFSD5hSLx3u-gNU47De7_78v-xPX_g9_qb9D7k_FBi4MP1F2dKJoRuDCcxvyJDPgUL-nHzmnwELjGnJ0nE309j22hU15KnXTq3GZ5kvSnfGuJTlp-cuKk9xh5uja9D8NWRF5sRhyaWR4uKhkwlL4mxJ1Zaq6vpBDqFtPhA.Z08YIxqvcx6RIiH7t3mBt_aTHblmZALhzlLIBkqli0I",
+      "value": "eyJhbGciOiJkaXIiLCJlbmMiOiJBMjU2Q0JDLUhTNTEyIiwia2lkIjoiYWtLSVU1RkpzVmkyUXJiS3dOYldEeWV6YUZLX3NHV0toNHZSaC1GVGUyMnh1TXdQMlI0T3cwTldZZ0x0Q3EzblUxSUVBTmVVRm9MdTR3cDBmY2wtREEifQ..4QnhV3ikOZkx0WcGRDwgpQ.M8hcEAcbDYrpwth0wYLS1tRa8fuf6Yx744-S7GJsEvyxa2oZTmKwXgzxXI2LxQxGTSEaQ2PO9Ci4eWX1RKNL39WEIJTRaxWdS8c7z25oN-aEBO5LyDIflFtjiCASQljsAq3yhe-3mvJBLYTqExBzt3S2PBHj0Pv29JwGvc9EsVvHtI2m2pZov1eX86g784-WilxlRKzFpOudbOqT-oOgIDb5wiOpkTK6guUUH9xhD4VCoujsv0ib4yQBU2Xp0UXe-Xmv3oMkvKJ9bhAOoDl1pg.XCP396PQPSvGA-Jcs5WK1eyHc2jYN0UA-eDx7VRyuS8",
       "domain": "localhost",
       "path": "/",
-      "expires": 1789301262.747701,
+      "expires": 1789459350.314756,
       "httpOnly": true,
       "secure": false,
       "sameSite": "Lax"

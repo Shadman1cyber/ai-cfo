@@ -168,11 +168,14 @@ ${history.map((m) => `${m.role}: ${m.content}`).join("\n")}
     });
 
     const rawContent = completion.choices[0]?.message?.content;
-    if (!rawContent) throw new Error("Empty response");
+    if (!rawContent || typeof rawContent !== "string") throw new Error("Empty response");
+
+    const trimmed = rawContent.trim();
+    if (!trimmed) throw new Error("Empty response");
 
     let parsed: { action?: string; params?: Record<string, unknown>; response?: string };
     try {
-      parsed = JSON.parse(rawContent);
+      parsed = JSON.parse(trimmed);
     } catch (parseError) {
       // AI didn't return valid JSON - use fallback keyword matching
       logger.warn({ userId, rawContent }, "AI returned invalid JSON, using fallback");

@@ -9,11 +9,11 @@ datasource db {
 
 model User {
   id            String    @id @default(cuid())
-  name          String?
-  email         String    @unique
+  name          String?   @db.VarChar(191)
+  email         String    @unique @db.VarChar(191)
   emailVerified DateTime?
-  passwordHash  String?
-  image         String?
+  passwordHash  String?   @db.VarChar(191)
+  image         String?   @db.VarChar(191)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   accounts      Account[]
@@ -24,17 +24,17 @@ model User {
 
 model Account {
   id                String  @id @default(cuid())
-  userId            String
-  type              String
-  provider          String
-  providerAccountId String
+  userId            String  @db.VarChar(100)
+  type              String  @db.VarChar(191)
+  provider          String  @db.VarChar(100)
+  providerAccountId String  @db.VarChar(100)
   refresh_token     String? @db.Text
   access_token      String? @db.Text
   expires_at        Int?
-  token_type        String?
-  scope             String?
+  token_type        String? @db.VarChar(191)
+  scope             String? @db.VarChar(191)
   id_token          String? @db.Text
-  session_state     String?
+  session_state     String? @db.VarChar(191)
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -43,15 +43,15 @@ model Account {
 
 model Session {
   id           String   @id @default(cuid())
-  sessionToken String   @unique
-  userId       String
+  sessionToken String   @unique @db.VarChar(191)
+  userId       String   @db.VarChar(100)
   expires      DateTime
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model VerificationToken {
-  identifier String
-  token      String   @unique
+  identifier String @db.VarChar(100)
+  token      String @unique @db.VarChar(100)
   expires    DateTime
 
   @@unique([identifier, token])
@@ -59,13 +59,13 @@ model VerificationToken {
 
 model Category {
   id           String        @id @default(cuid())
-  name         String
-  nameFa       String
-  icon         String?
-  color        String?
+  name         String        @db.VarChar(100)
+  nameFa       String        @db.VarChar(191)
+  icon         String?       @db.VarChar(191)
+  color        String?       @db.VarChar(191)
   type         TransactionType
   isDefault    Boolean       @default(false)
-  userId       String?
+  userId       String?       @db.VarChar(100)
   user         User?         @relation(fields: [userId], references: [id], onDelete: Cascade)
   transactions Transaction[]
   createdAt    DateTime      @default(now())
@@ -79,12 +79,12 @@ model Transaction {
   id          String        @id @default(cuid())
   amount      Decimal       @db.Decimal(19, 4)
   type        TransactionType
-  description String?
+  description String?       @db.VarChar(191)
   date        DateTime      @default(now())
   receiptUrl  String?
-  userId      String
+  userId      String        @db.VarChar(100)
   user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  categoryId  String?
+  categoryId  String?       @db.VarChar(100)
   category    Category?     @relation(fields: [categoryId], references: [id], onDelete: SetNull)
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt

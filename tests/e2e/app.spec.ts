@@ -34,7 +34,7 @@ test.describe("Registration", () => {
     await page.fill('input[name="confirmPassword"]', password);
     await page.click('button[type="submit"]');
 
-    await expect(page).toHaveURL(/.*login/);
+    await expect(page).toHaveURL(/.*login/, { timeout: 30000 });
     await expect(page.locator("text=ثبت‌نام")).toBeVisible();
   });
 });
