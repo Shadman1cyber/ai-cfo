@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 interface ChatTurn {
   role: "user" | "assistant";
   content: string;
+  image?: string;
 }
 
 const SUGGESTIONS = [
@@ -19,15 +20,42 @@ export default function ChatPage() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [historyLoaded, setHistoryLoaded] = useState(false);
+  const [pendingConfirm, setPendingConfirm] = useState<File | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, loading]);
+  }, [messages, loading, historyLoaded]);
+
+  useEffect(() => {
+    async function loadHistory() {
+      try {
+        const res = await fetch("/api/chat/history", {
+          credentials: "include",
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        const loaded: ChatTurn[] = data.data || [];
+        setMessages(loaded.map((m) => ({
+          role: m.role,
+          content: m.content,
+          image: m.image,
+        })));
+        setHistoryLoaded(true);
+      } catch (e) {
+        console.error(e);
+      }
+    }
+    loadHistory();
+  }, []);
 
   const sendMessage = async (text: string) => {
+    if (loading) return;
+
     const trimmed = text.trim();
-    if (!trimmed || loading) return;
+    if (!trimmed) return;
 
     const userMessage: ChatTurn = { role: "user", content: trimmed };
     const history = messages.slice(-12).map(({ role, content }) => ({ role, content }));
@@ -41,6 +69,7 @@ export default function ChatPage() {
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({ message: trimmed, history }),
       });
 
@@ -52,8 +81,12 @@ export default function ChatPage() {
       }
 
       if (!res.ok || !json.data) {
-        setError("خطا در دریافت پاسخ، لطفاً دوباره تلاش کنید");
+        setError(json.error || "خطا در پردازش پیام، لطفاً دوباره تلاش کنید");
         return;
+      }
+
+      if (json.data.type === "duplicate_confirm") {
+        setPendingConfirm(fileInputRef.current?.files?.[0] ?? null);
       }
 
       const assistantMessage: ChatTurn = { role: "assistant", content: json.data.response };
@@ -64,6 +97,78 @@ export default function ChatPage() {
       setLoading(false);
     }
   };
+
+  const sendImage = async (file: File, confirm: boolean = false) => {
+    if (loading) return;
+
+    const imageUrl = URL.createObjectURL(file);
+    const userMessage: ChatTurn = { role: "user", content: "رسید ارسال شد", image: imageUrl };
+
+    setMessages((prev) => [...prev, userMessage]);
+    setInput("");
+    setError(null);
+    setPendingConfirm(null);
+    setLoading(true);
+
+    const formData = new FormData();
+    formData.append("image", file);
+    formData.append("message", input);
+    if (confirm) formData.append("confirm", "1");
+
+    try {
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        credentials: "include",
+        body: formData,
+      });
+
+      const json = await res.json();
+
+      if (res.status === 401) {
+        window.location.assign("/login");
+        return;
+      }
+
+      if (!res.ok || !json.data) {
+        setError(json.error || "خطا در پردازشReceipt");
+        return;
+      }
+
+      if (json.data.type === "duplicate_confirm") {
+        setPendingConfirm(file);
+      }
+
+      const assistantMessage: ChatTurn = { role: "assistant", content: json.data.response };
+      setMessages((prev) => [...prev, assistantMessage]);
+    } catch {
+      setError("خطای شبکه، لطفاً دوباره تلاش کنید");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) sendImage(file);
+    e.target.value = "";
+  };
+
+  const deleteHistory = async () => {
+    if (confirm("آیا می‌خواهید تاریخچه چت را پاک کنید؟")) {
+      const res = await fetch("/api/chat/history", {
+        method: "DELETE",
+        credentials: "include",
+      });
+      if (res.ok) {
+        setMessages([]);
+        setHistoryLoaded(false);
+      }
+    }
+  };
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, loading, historyLoaded]);
 
   return (
     <div className="space-y-6">
@@ -96,6 +201,14 @@ export default function ChatPage() {
                     {s}
                   </button>
                 ))}
+                {historyLoaded && (
+                  <button
+                    onClick={() => deleteHistory()}
+                    className="px-4 py-2 text-sm font-medium text-white bg-red-500 rounded-lg hover:bg-red-600 transition-colors"
+                  >
+                    پاک کردن تاریخچه
+                  </button>
+                )}
               </div>
             </div>
           ) : (
@@ -112,10 +225,39 @@ export default function ChatPage() {
                         : "bg-muted text-foreground rounded-tl-sm"
                     }`}
                   >
+                    {m.image && (
+                      <img
+                        src={m.image}
+                        alt="رسید"
+                        className="rounded-lg mb-2 max-h-40 w-auto object-contain bg-white/10"
+                      />
+                    )}
                     {m.content}
                   </div>
                 </div>
               ))}
+              {pendingConfirm && (
+                <div className="flex justify-end">
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => pendingConfirm && sendImage(pendingConfirm, true)}
+                      disabled={loading}
+                      className="px-4 py-2 text-sm font-medium text-white bg-primary rounded-lg hover:bg-primary-hover disabled:opacity-50 transition-colors"
+                    >
+                      بله، دوباره ثبت کن
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setPendingConfirm(null)}
+                      disabled={loading}
+                      className="px-4 py-2 text-sm font-medium border border-border rounded-lg hover:bg-muted disabled:opacity-50 transition-colors"
+                    >
+                      انصراف
+                    </button>
+                  </div>
+                </div>
+              )}
               {loading && (
                 <div className="flex justify-end">
                   <div className="bg-muted text-foreground px-4 py-3 rounded-2xl rounded-tl-sm flex gap-1.5">
@@ -136,37 +278,53 @@ export default function ChatPage() {
 
           <div ref={bottomRef} />
         </div>
+      </div>
 
-        <div className="border-t border-border p-4">
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              sendMessage(input);
-            }}
-            className="flex items-end gap-2"
+      <div className="border-t border-border p-4">
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            sendMessage(input);
+          }}
+          className="flex items-end gap-2"
+        >
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handleFileChange}
+            className="hidden"
+          />
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={loading}
+            title="ارسالReceipt"
+            className="inline-flex items-center justify-center w-11 h-11 rounded-lg border border-border hover:border-primary hover:bg-primary/5 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <textarea
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
-                  e.preventDefault();
-                  sendMessage(input);
-                }
-              }}
-              rows={2}
-              placeholder="پیام خود را بنویسید..."
-              className="flex-1 resize-none px-4 py-2.5 border rounded-lg bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-            />
-            <button
-              type="submit"
-              disabled={loading || !input.trim()}
-              className="inline-flex items-center gap-2 px-4 py-2.5 bg-primary text-white font-medium rounded-lg hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
-              ارسال
-            </button>
-          </form>
-        </div>
+            <span className="text-lg" aria-hidden>📎</span>
+          </button>
+          <textarea
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage(input);
+              }
+            }}
+            rows={2}
+            placeholder="پیام خود را بنویسید..."
+            className="flex-1 resize-none px-4 py-2.5 border rounded-lg bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+          />
+          <button
+            type="submit"
+            disabled={loading || !input.trim()}
+            className="inline-flex items-center gap-2 px-4 py-2.5 bg-primary text-white font-medium rounded-lg hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            ارسال
+          </button>
+        </form>
       </div>
     </div>
   );

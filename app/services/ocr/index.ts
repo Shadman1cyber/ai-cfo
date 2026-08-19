@@ -51,7 +51,7 @@ export async function processReceiptImage(
   }
 }
 
-function extractReceiptData(text: string): OCRResult["data"] {
+export function extractReceiptData(text: string): OCRResult["data"] {
   const lines = text.split("\n").map((l) => l.trim()).filter(Boolean);
 
   const result: OCRResult["data"] = {
@@ -86,24 +86,57 @@ function extractReceiptData(text: string): OCRResult["data"] {
   return result;
 }
 
+function toWesternDigits(line: string): string {
+  const persianDigits = "۰۱۲۳۴۵۶۷۸۹";
+  const westernDigits = "0123456789";
+  let converted = line;
+  for (let i = 0; i < 10; i++) {
+    converted = converted.replaceAll(persianDigits[i], westernDigits[i]);
+  }
+  return converted;
+}
+
 function extractAmount(line: string): number | null {
+  const convertedLine = toWesternDigits(line);
+
   const patterns = [
     /مجموع[:\s]*([\d,]+)/i,
     /total[:\s]*([\d,]+)/i,
     /مبلغ[:\s]*([\d,]+)/i,
+    /([\d,]+)\s*[Tt]oman/i,
+    /([\d,]+)\s*[Rr]ial/i,
+    /([\d,]+)\s*[Tt]oman/i,
+    /([\d,]+)\s*[Rr]ial/i,
     /([\d,]+)\s*تومان/i,
     /([\d,]+)\s*ریال/i,
     /^[\s]*([\d,]{4,})[\s]*$/,
   ];
 
+  // Find the first matching pattern and extract the amount
+  let amount: number | null = null;
+  let unit: string | null = null;
+
   for (const pattern of patterns) {
-    const match = line.match(pattern);
+    const match = convertedLine.match(pattern);
     if (match) {
       const num = parseInt(match[1].replace(/,/g, ""), 10);
-      if (!isNaN(num) && num > 1000) return num;
+      if (!isNaN(num) && num > 1000) {
+        amount = num;
+        // Determine the unit from the matched pattern
+        if (pattern.toString().includes("[Rr]ial")) unit = "rial";
+        else if (pattern.toString().includes("[Tt]oman")) unit = "toman";
+        else if (pattern.toString().includes("تومان")) unit = "toman";
+        else if (pattern.toString().includes("ریال")) unit = "rial";
+        break;
+      }
     }
   }
-  return null;
+
+  // Convert Rial to Toman (1 Toman = 10 Rial)
+  if (amount !== null && unit === "rial") {
+    return Math.round(amount / 10);
+  }
+  return amount;
 }
 
 function extractDate(line: string): string | null {

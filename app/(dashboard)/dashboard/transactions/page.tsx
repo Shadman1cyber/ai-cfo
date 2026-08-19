@@ -69,7 +69,9 @@ export default function TransactionsPage() {
     params.set("limit", String(pagination.limit));
 
     try {
-      const res = await fetch(`/api/transactions?${params}`);
+      const res = await fetch(`/api/transactions?${params}`, {
+        credentials: "include",
+      });
       if (res.status === 401) {
         router.push("/login");
         return;
